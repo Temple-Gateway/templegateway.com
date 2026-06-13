@@ -38,9 +38,18 @@ const TourDetail = () => {
         .map(name => getTempleByName(name))
         .filter(Boolean) || [];
 
+    const fallbackTitle = slug
+        ? slug.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")
+        : "Tour Details";
+
     if (isLoading) {
         return (
             <Layout>
+                <SEO 
+                    title={fallbackTitle} 
+                    description={`Embark on the spiritual ${fallbackTitle} pilgrimage journey.`} 
+                    canonicalUrl={`https://www.templegateway.com/tour/${slug}`}
+                />
                 <div className="min-h-[60vh] flex items-center justify-center">
                     <div className="text-center space-y-4">
                         <div className="w-16 h-16 border-4 border-saffron border-t-transparent rounded-full animate-spin mx-auto" />
@@ -54,6 +63,11 @@ const TourDetail = () => {
     if (!tour) {
         return (
             <Layout>
+                <SEO 
+                    title="Tour Not Found" 
+                    description="The tour you're looking for doesn't exist." 
+                    noindex={true}
+                />
                 <div className="min-h-[60vh] flex items-center justify-center">
                     <div className="text-center space-y-4">
                         <h1 className="font-display text-4xl font-bold text-foreground">Tour Not Found</h1>
@@ -73,6 +87,7 @@ const TourDetail = () => {
                 title={tour.name}
                 description={tour.description || tour.longDescription || `Embark on the spiritual ${tour.name} pilgrimage journey.`}
                 ogImage={tour.imageUrl || undefined}
+                canonicalUrl={`https://www.templegateway.com/tour/${tour.slug}`}
             />
             {/* Hero Section */}
             <section

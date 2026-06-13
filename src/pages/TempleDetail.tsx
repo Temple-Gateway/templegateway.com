@@ -1,4 +1,5 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import {
     MapPin,
     ArrowLeft,
@@ -16,11 +17,28 @@ import SEO from "@/components/SEO";
 
 const TempleDetail = () => {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const { temple, isLoading } = useCMSTemple(id || "");
+
+    useEffect(() => {
+        if (temple && id === String(temple.id)) {
+            // Redirect from UUID URL to Slug URL
+            navigate(`/temple/${temple.slug}`, { replace: true });
+        }
+    }, [temple, id, navigate]);
+
+    const fallbackTitle = id
+        ? id.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")
+        : "Temple Details";
 
     if (isLoading) {
         return (
             <Layout>
+                <SEO 
+                    title={fallbackTitle} 
+                    description={`Discover the spiritual significance, history, and timings of ${fallbackTitle}.`} 
+                    canonicalUrl={`https://www.templegateway.com/temple/${id}`}
+                />
                 <div className="min-h-[60vh] flex items-center justify-center">
                     <div className="text-center space-y-4">
                         <div className="w-16 h-16 border-4 border-saffron border-t-transparent rounded-full animate-spin mx-auto" />
@@ -34,6 +52,11 @@ const TempleDetail = () => {
     if (!temple) {
         return (
             <Layout>
+                <SEO 
+                    title="Temple Not Found" 
+                    description="The temple you're looking for doesn't exist." 
+                    noindex={true}
+                />
                 <div className="min-h-[60vh] flex items-center justify-center">
                     <div className="text-center space-y-4">
                         <h1 className="font-display text-4xl font-bold text-foreground">Temple Not Found</h1>
@@ -53,6 +76,7 @@ const TempleDetail = () => {
                 title={temple.name} 
                 description={temple.famousFor || `Discover the spiritual significance, history, and timings of ${temple.name}.`} 
                 ogImage={temple.imageUrl || undefined}
+                canonicalUrl={`https://www.templegateway.com/temple/${temple.slug}`}
             />
             {/* Hero Section */}
             <section

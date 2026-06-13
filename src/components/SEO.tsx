@@ -6,6 +6,7 @@ interface SEOProps {
   canonicalUrl?: string;
   ogImage?: string;
   ogType?: 'website' | 'article';
+  noindex?: boolean;
 }
 
 export default function SEO({ 
@@ -13,7 +14,8 @@ export default function SEO({
   description, 
   canonicalUrl = window.location.href, 
   ogImage = '', 
-  ogType = 'website' 
+  ogType = 'website',
+  noindex = false
 }: SEOProps) {
   const fullTitle = `${title} - Temple Gateway`;
   
@@ -22,6 +24,7 @@ export default function SEO({
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <meta name="robots" content={noindex ? "noindex, nofollow" : "index, follow"} />
       
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={ogType} />

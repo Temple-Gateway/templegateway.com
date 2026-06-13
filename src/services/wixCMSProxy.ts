@@ -5,7 +5,7 @@
  * update your hooks to use these functions instead.
  */
 
-const PROXY_BASE_URL = import.meta.env.VITE_PROXY_URL || '';
+const PROXY_BASE_URL = import.meta.env.DEV ? (import.meta.env.VITE_PROXY_URL || '') : '';
 
 /**
  * Fetch all temples from backend proxy

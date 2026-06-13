@@ -242,7 +242,7 @@ const Index = () => {
                         {temple.famousFor}
                       </p>
                       <Link
-                        to={`/temple/${temple.id}`}
+                        to={`/temple/${temple.slug}`}
                         className="inline-flex items-center text-primary font-body text-sm hover:underline"
                       >
                         Learn more →

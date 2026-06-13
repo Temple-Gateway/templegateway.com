@@ -13,8 +13,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MapPin, Search, Filter, X } from "lucide-react";
+import { MapPin, Search, Filter, X, Sparkles, Compass } from "lucide-react";
 import SEO from "@/components/SEO";
+
+// Helper to extract clean tags/categories based on temple details
+export const getTempleCategories = (temple: any): string[] => {
+  const categories: string[] = [];
+  const textToSearch = `${temple.name || ""} ${temple.famousFor || ""} ${temple.content || ""} ${temple.religion || ""}`.toLowerCase();
+  
+  if (textToSearch.includes("jyotirlinga")) {
+    categories.push("Jyotirlinga");
+  }
+  if (textToSearch.includes("shakti peetha") || textToSearch.includes("shakti peeth") || textToSearch.includes("shakti pitha")) {
+    categories.push("Shakti Peetha");
+  }
+  if (textToSearch.includes("char dham")) {
+    categories.push("Char Dham");
+  }
+  if (textToSearch.includes("unesco")) {
+    categories.push("UNESCO Site");
+  }
+  if (textToSearch.includes("monastery") || textToSearch.includes("stupa")) {
+    categories.push("Monastery/Stupa");
+  }
+  if (textToSearch.includes("gurdwara") || textToSearch.includes("gurudwara")) {
+    categories.push("Gurdwara");
+  }
+  if (textToSearch.includes("ancient") || textToSearch.includes("heritage")) {
+    categories.push("Ancient Temple/Heritage");
+  }
+  if (textToSearch.includes("architectur") || textToSearch.includes("marvel") || textToSearch.includes("sculpt") || textToSearch.includes("carv")) {
+    categories.push("Architectural Marvel");
+  }
+  if (textToSearch.includes("pilgrimag") || textToSearch.includes("pilgrim") || textToSearch.includes("sacred") || textToSearch.includes("holy")) {
+    categories.push("Pilgrimage Center");
+  }
+  
+  if (categories.length === 0) {
+    categories.push("Other Temple");
+  }
+  
+  return categories;
+};
 
 const Temples = () => {
   const { temples } = useCMSTemples(); // ✅ Only Wix CMS
@@ -29,28 +69,34 @@ const Temples = () => {
 
   // Dynamic filter options from Wix data
   const deities = useMemo(
-    () => [...new Set(temples.map((t: any) => t.deity).filter(Boolean))],
+    () => [...new Set(temples.map((t: any) => t.deity).filter(Boolean))].sort(),
     [temples]
   );
 
   const states = useMemo(
-    () => [...new Set(temples.map((t: any) => t.state).filter(Boolean))],
+    () => [...new Set(temples.map((t: any) => t.state).filter(Boolean))].sort(),
     [temples]
   );
 
   const categories = useMemo(() => {
-    const cats = temples
-      .map((t: any) => t.famousFor?.split(",")[0]?.trim())
-      .filter(Boolean);
-    return [...new Set(cats)];
+    const cats = new Set<string>();
+    temples.forEach((t: any) => {
+      getTempleCategories(t).forEach(c => cats.add(c));
+    });
+    return Array.from(cats).sort();
   }, [temples]);
 
   const filteredTemples = useMemo(() => {
     return temples.filter((temple: any) => {
       const matchesSearch =
+        !searchQuery ||
         temple.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         temple.famousFor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        temple.state?.toLowerCase().includes(searchQuery.toLowerCase());
+        temple.state?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        temple.district?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        temple.town?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        temple.deity?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        getTempleCategories(temple).some((cat: string) => cat.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchesDeity =
         selectedDeity === "all" || temple.deity === selectedDeity;
@@ -60,9 +106,7 @@ const Temples = () => {
 
       const matchesCategory =
         selectedCategory === "all" ||
-        temple.famousFor
-          ?.toLowerCase()
-          .includes(selectedCategory.toLowerCase());
+        getTempleCategories(temple).includes(selectedCategory);
 
       return matchesSearch && matchesDeity && matchesState && matchesCategory;
     });
@@ -80,6 +124,14 @@ const Temples = () => {
     selectedDeity !== "all" ||
     selectedState !== "all" ||
     selectedCategory !== "all";
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (selectedDeity !== "all") count++;
+    if (selectedState !== "all") count++;
+    if (selectedCategory !== "all") count++;
+    return count;
+  }, [selectedDeity, selectedState, selectedCategory]);
 
   return (
     <Layout>
@@ -117,24 +169,44 @@ const Temples = () => {
                   placeholder="Search temples by name, location, or significance..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-11 h-12 text-base rounded-lg border-muted-foreground/20 bg-transparent"
+                  className="pl-11 pr-10 h-12 text-base rounded-lg border-muted-foreground/20 bg-transparent transition-all focus-visible:ring-1 focus-visible:ring-primary"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
               </div>
               <Button
-                variant="outline"
-                className="h-12 px-6 rounded-lg border-muted-foreground/20 flex items-center gap-2"
+                variant={activeFiltersCount > 0 ? "default" : "outline"}
+                className={`h-12 px-6 rounded-lg border-muted-foreground/20 flex items-center gap-2 transition-all duration-300 ${
+                  activeFiltersCount > 0 
+                    ? "bg-primary text-primary-foreground border-transparent shadow-sm" 
+                    : "hover:bg-accent"
+                }`}
                 onClick={() => setShowFilters(!showFilters)}
               >
-                <Filter size={18} /> Filters
+                <Filter size={18} /> 
+                <span>Filters</span>
+                {activeFiltersCount > 0 && (
+                  <span className="ml-1.5 px-2 py-0.5 text-xs font-bold bg-white text-primary rounded-full shadow-sm">
+                    {activeFiltersCount}
+                  </span>
+                )}
               </Button>
             </div>
 
-            {/* In the screenshot it seems filters are always shown or nicely toggled */}
+            {/* Filters Toggled Section */}
             <div className={`mt-6 ${!showFilters ? "hidden" : ""}`}>
               <hr className="mb-6 border-muted-foreground/10" />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
                 <div className="space-y-2">
-                  <Label className="text-sm text-muted-foreground">Deity</Label>
+                  <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles size={14} className="text-saffron" /> Deity
+                  </Label>
                   <Select value={selectedDeity} onValueChange={setSelectedDeity}>
                     <SelectTrigger className="h-12 rounded-lg border-muted-foreground/20 bg-transparent">
                       <SelectValue placeholder="All Deities" />
@@ -149,7 +221,9 @@ const Temples = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm text-muted-foreground">State</Label>
+                  <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                    <MapPin size={14} className="text-primary" /> State
+                  </Label>
                   <Select value={selectedState} onValueChange={setSelectedState}>
                     <SelectTrigger className="h-12 rounded-lg border-muted-foreground/20 bg-transparent">
                       <SelectValue placeholder="All States" />
@@ -164,7 +238,9 @@ const Temples = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm text-muted-foreground">Significance</Label>
+                  <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                    <Compass size={14} className="text-secondary" /> Significance
+                  </Label>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                     <SelectTrigger className="h-12 rounded-lg border-muted-foreground/20 bg-transparent">
                       <SelectValue placeholder="All Categories" />
@@ -178,23 +254,24 @@ const Temples = () => {
                   </Select>
                 </div>
               </div>
-
-              {hasActiveFilters && (
-                <div className="mt-4 flex justify-end">
-                  <Button variant="ghost" onClick={clearFilters} className="text-muted-foreground">
-                    <X size={16} className="mr-2" /> Clear Filters
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Results */}
-          {/* Results Header */}
-          <div className="mb-4">
-            <p className="text-muted-foreground">
-              Showing <span className="font-bold text-foreground">{filteredTemples.length}</span> temples
+          {/* Results Summary & Clear Button */}
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <p className="text-muted-foreground font-body text-sm md:text-base">
+              Found <span className="font-semibold text-foreground bg-primary/10 px-2.5 py-0.5 rounded text-sm">{filteredTemples.length}</span> sacred temples matching your search.
             </p>
+            {hasActiveFilters && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearFilters} 
+                className="h-9 px-3 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive self-start sm:self-auto rounded-lg flex items-center gap-1.5 transition-colors"
+              >
+                <X size={14} /> Clear all filters
+              </Button>
+            )}
           </div>
 
           <div className="grid lg:grid-cols-12 gap-8">
@@ -202,7 +279,13 @@ const Temples = () => {
             {/* Temple List */}
             <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide lg:col-span-7">
               {filteredTemples.length === 0 ? (
-                <p>No temples found</p>
+                <div className="bg-muted/30 border border-muted-foreground/10 rounded-2xl p-12 text-center">
+                  <Compass size={48} className="mx-auto text-muted-foreground/40 mb-4 animate-pulse" />
+                  <h3 className="font-bold text-lg text-foreground mb-1">No temples found</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                    Try adjusting your keyword search or changing the filter selections.
+                  </p>
+                </div>
               ) : (
                 filteredTemples.map((temple: any) => (
                   <div
@@ -214,7 +297,7 @@ const Temples = () => {
                     onClick={() => setSelectedTemple(temple)}
                   >
                     <div className="pr-12">
-                      <div className="flex gap-2 mb-3">
+                      <div className="flex flex-wrap gap-1.5 mb-3">
                         {temple.deity && (
                           <span className="text-[10px] font-bold text-saffron bg-saffron/10 tracking-widest uppercase px-2 py-1 rounded">
                             {temple.deity}
@@ -225,6 +308,11 @@ const Temples = () => {
                             {temple.state}
                           </span>
                         )}
+                        {getTempleCategories(temple).slice(0, 2).map((cat: string) => (
+                          <span key={cat} className="text-[10px] font-medium text-primary bg-primary/5 tracking-widest px-2 py-1 rounded">
+                            {cat}
+                          </span>
+                        ))}
                       </div>
 
                       <h3 className="font-bold text-lg text-foreground mb-1 leading-tight">{temple.name}</h3>
