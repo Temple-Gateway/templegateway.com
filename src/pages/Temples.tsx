@@ -68,10 +68,27 @@ const Temples = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   // Dynamic filter options from Wix data
-  const deities = useMemo(
-    () => [...new Set(temples.map((t: any) => t.deity).filter(Boolean))].sort(),
-    [temples]
-  );
+  const deities = useMemo(() => {
+    const deitySet = new Set<string>();
+    temples.forEach((t: any) => {
+      if (t.deity) {
+        t.deity.split(",").forEach((d: string) => {
+          const cleaned = d.trim();
+          if (cleaned) {
+            const lowerCleaned = cleaned.toLowerCase();
+            if (lowerCleaned !== "god" && lowerCleaned !== "others" && lowerCleaned !== "other") {
+              const formatted = cleaned
+                .split(/\s+/)
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(" ");
+              deitySet.add(formatted);
+            }
+          }
+        });
+      }
+    });
+    return Array.from(deitySet).sort();
+  }, [temples]);
 
   const states = useMemo(
     () => [...new Set(temples.map((t: any) => t.state).filter(Boolean))].sort(),
@@ -99,7 +116,12 @@ const Temples = () => {
         getTempleCategories(temple).some((cat: string) => cat.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchesDeity =
-        selectedDeity === "all" || temple.deity === selectedDeity;
+        selectedDeity === "all" ||
+        (temple.deity &&
+          temple.deity
+            .split(",")
+            .map((d: string) => d.trim().toLowerCase())
+            .includes(selectedDeity.toLowerCase()));
 
       const matchesState =
         selectedState === "all" || temple.state === selectedState;
