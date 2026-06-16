@@ -281,9 +281,9 @@ const Temples = () => {
 
           {/* Results Summary & Clear Button */}
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <p className="text-muted-foreground font-body text-sm md:text-base">
+            {/* <p className="text-muted-foreground font-body text-sm md:text-base">
               Found <span className="font-semibold text-foreground bg-primary/10 px-2.5 py-0.5 rounded text-sm">{filteredTemples.length}</span> sacred temples matching your search.
-            </p>
+            </p> */}
             {hasActiveFilters && (
               <Button 
                 variant="ghost" 
