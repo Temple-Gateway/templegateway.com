@@ -299,7 +299,7 @@ const Temples = () => {
           <div className="grid lg:grid-cols-12 gap-8">
 
             {/* Temple List */}
-            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide lg:col-span-7">
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 temple-list-scroll lg:col-span-7">
               {filteredTemples.length === 0 ? (
                 <div className="bg-muted/30 border border-muted-foreground/10 rounded-2xl p-12 text-center">
                   <Compass size={48} className="mx-auto text-muted-foreground/40 mb-4 animate-pulse" />

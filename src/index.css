@@ -265,3 +265,31 @@
   }
 }
 
+/* Custom scrollbar for temple list only */
+.temple-list-scroll::-webkit-scrollbar {
+  display: block !important;
+  width: 6px;
+}
+
+.temple-list-scroll::-webkit-scrollbar-track {
+  background: hsl(var(--muted) / 0.3);
+  border-radius: 9999px;
+}
+
+.temple-list-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.4);
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+.temple-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.8);
+}
+
+/* Also support Firefox */
+.temple-list-scroll {
+  scrollbar-width: thin !important;
+  scrollbar-color: hsl(var(--primary) / 0.4) hsl(var(--muted) / 0.3) !important;
+}
+
+
